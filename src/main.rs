@@ -19,21 +19,22 @@ fn main() {
 
     let mut tasks: Vec<Task> = Vec::new();
 
-    if !Path::new("./tasks.txt").exists() { create_tasks_file(); }
+    if !Path::new("tasks.json").exists() { create_tasks_file(); }
 
-    
+    /*
     tasks.push(Task{name: String::from("Hello"), is_complete: false});
 
     println!("{:?}",tasks);
     save_to_file(tasks);
-    
-    /*
-    let task = read_tasks_file(Path::new("./tasks.txt"));
-    println!("{:?}", task);
     */
-
-    /*
     
+    
+    let task = read_tasks_file_h();
+    println!("{:?}", task);
+    
+
+    
+    /*
     match command.as_deref() {
         Some("help")        => { 
             println!("help\t\t\t\t: Show help");
@@ -74,29 +75,30 @@ fn main() {
     
 }
 
-
+fn read_tasks_file_h() -> std::io::Result<()> {
+    let file = File::open("tasks.json")?;
+    let mut contents = String::new();
+    file.read_to_string(&mut contents)?;
+    Ok(());
+}
 
 fn read_tasks_file<P: AsRef<Path>>(path: P) -> Result<Task, Box<Error>>{
+    let file = File::open(path)?;
+    let reader = BufReader::new(file);
 
-
-    let mut file = File::open(path).unwrap();
-    let mut contents = String::new();
-    file.read_to_string(&mut contents);
-    println!("{:?}", file);
-
-    println!("{:?}", contents);
-    let t = serde_json::from_str(&contents).unwrap();
+    let t = serde_json::from_reader(reader)?;
     Ok(t)
 }
 
 fn create_tasks_file() -> std::io::Result<()>{
-    File::create("tasks.txt")?;
+    File::create("tasks.json")?;
     Ok(())
 }
 
 
 fn save_to_file(tasks: Vec<Task>) -> std::io::Result<()> {
-    let file = OpenOptions::new().write(true).open("tasks.txt")?;
+    let file = OpenOptions::new().write(true).open("tasks.json")?;
+
     serde_json::to_writer(file, &tasks)?;
     Ok(())
 }
