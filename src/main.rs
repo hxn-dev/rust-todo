@@ -59,6 +59,7 @@ fn main() {
             }
         },
         Some("complete") => {
+            if tasks.len() == 0 { println!("There is no task"); return }
             let mut current_task = tasks.iter_mut().filter(|x| x.name == std::env::args().nth(2).unwrap()).next().unwrap();
             current_task.is_complete = true;
             println!("The task: {} has ben marked as completed", current_task.name);
@@ -68,6 +69,7 @@ fn main() {
             }
         },
         Some("uncomplete") => {
+            if tasks.len() == 0 { println!("There is no task"); return }
             let mut current_task = tasks.iter_mut().filter(|x| x.name == std::env::args().nth(2).unwrap()).next().unwrap();
             current_task.is_complete = false;
             println!("The task: {} has ben marked as uncompleted", current_task.name);
