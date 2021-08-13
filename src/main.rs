@@ -125,7 +125,7 @@ fn main() {
                 _ => ()
             }
         }
-        _ => println!("List of avaiable args: help, add, list, complete, remove"),
+        _ => println!("List of avaiable args: help, add, list, complete, uncomplete, remove"),
     }
 }
 
