@@ -1,7 +1,7 @@
 ## Simple todoapp in cli with rust
 This is my first little experimentation using rust. I've made a simple "todo app".
 
-##avaiable commands:
+## avaiable commands:
 + help
 + list
 + add
