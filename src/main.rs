@@ -45,10 +45,19 @@ fn main() {
                 println!("wrong syntax.. use: add \"Do homework\"");
                 return
             }
-            println!("Task: {:?} has been added", std::env::args().nth(2).unwrap());
-            tasks.push(Task{name: std::env::args().nth(2).unwrap(), is_complete: false});
-            let result = save_to_file(&mut tasks);
-            println!("{:?}", result);
+            match find_task_by_name(std::env::args().nth(2).unwrap(), &mut tasks) {
+                None => {
+                    println!("Task: {:?} has been added", std::env::args().nth(2).unwrap());
+                    tasks.push(Task{name: std::env::args().nth(2).unwrap(), is_complete: false});
+                    match save_to_file(&mut tasks) {
+                        Err(e) => println!("{:?}", e),
+                        _ => ()
+                    }
+                },
+                Some(task) => {
+                    println!("Task: {} already exist", task.name);
+                }
+            }
         },
         Some("list") => {
             println!("Listing all tasks.. {:?} task(s) found", tasks.len());
@@ -63,18 +72,16 @@ fn main() {
                 return
             }
 
-            if tasks.len() == 0 { println!("Task not found"); return }
-            let current_task = tasks.iter_mut().filter(|x| x.name == std::env::args().nth(2).unwrap()).next();
-            if current_task == None {
-                println!("Couldn't find task: {:?}", std::env::args().nth(2).unwrap());
-                return
-            }
-            let current_task = current_task.unwrap();
-            current_task.is_complete = true;
-            println!("The task: {} has been marked as completed", current_task.name);
-            match save_to_file(&mut tasks) {
-                Err(e) => println!("{:?}", e),
-                _ => ()
+            match find_task_by_name(std::env::args().nth(2).unwrap(), &mut tasks) {
+                None => println!("Couldn't find task: {:?}", std::env::args().nth(2).unwrap().to_lowercase()),
+                Some(task) => {
+                    task.is_complete = true;
+                    println!("The task: {} has been marked as completed", task.name);
+                    match save_to_file(&mut tasks) {
+                        Err(e) => println!("{:?}", e),
+                        _ => ()
+                    }
+                },
             }
         },
         Some("uncomplete") => {
@@ -82,29 +89,25 @@ fn main() {
                 return
             }
 
-            if tasks.len() == 0 { println!("Task not found"); return }
-            let current_task = tasks.iter_mut().filter(|x| x.name == std::env::args().nth(2).unwrap()).next();
-            if current_task == None {
-                println!("Couldn't find task: {:?}", std::env::args().nth(2).unwrap());
-                return
-            }
-            let current_task = current_task.unwrap();
-            current_task.is_complete = false;
-            
-            println!("The task: {} has been marked as uncompleted", current_task.name);
-            match save_to_file(&mut tasks) {
-                Err(e) => println!("{:?}", e),
-                _ => ()
+            match find_task_by_name(std::env::args().nth(2).unwrap(), &mut tasks) {
+                None => println!("Couldn't find task: {:?}", std::env::args().nth(2).unwrap().to_lowercase()),
+                Some(task) => {
+                    task.is_complete = false;
+                    println!("The task: {} has been marked as uncompleted", task.name);
+                    match save_to_file(&mut tasks) {
+                        Err(e) => println!("{:?}", e),
+                        _ => ()
+                    }
+                },
             }
         },
         Some("remove") => {
             if !task_name_given() {
                 return
             }
-            
+
             let tasks_count = tasks.len();
-            
-            tasks.retain(|b| b.name != std::env::args().nth(2).unwrap());
+            tasks.retain(|b| (b.name).to_lowercase() != std::env::args().nth(2).unwrap().to_lowercase());
             let new_tasks_count = tasks.len();
             if tasks_count > new_tasks_count { 
                 println!("Task: {:?} has been removed.", std::env::args().nth(2).unwrap()); 
@@ -124,6 +127,15 @@ fn main() {
         }
         _ => println!("List of avaiable args: help, add, list, complete, remove"),
     }
+}
+
+fn find_task_by_name(task_name: String, tasks: &mut Vec<Task>) -> Option<&mut Task> {
+    let current_task = tasks.iter_mut().filter(|x| x.name.to_lowercase() == task_name.to_lowercase()).next();
+    if current_task == None { 
+        None 
+    } else {
+        current_task
+    }   
 }
 
 fn task_name_given() -> bool {
@@ -154,8 +166,8 @@ fn create_tasks_file() -> std::io::Result<()>{
 }
 
 
-fn save_to_file(tasks: &Vec<Task>) -> std::io::Result<()> {
+fn save_to_file(tasks: &Vec<Task>) -> Result<bool, Box<dyn Error>> {
     let file = OpenOptions::new().write(true).truncate(true).open("tasks.json")?;
     serde_json::to_writer(file, &tasks)?;
-    Ok(())
+    Ok(true)
 }
